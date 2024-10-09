@@ -1,0 +1,37 @@
+package org.example.functions.enums;
+
+public enum ServiceCategory {
+
+    AI_AND_MACHINE_LEARNING("AI AND MACHINE LEARNING"),
+    COMPUTE("COMPUTE"),
+    DATABASES("DATABASES"),
+    DEVELOPER_TOOLS("DEVELOPER TOOLS"),
+
+    INTEGRATION("INTEGRATION"),
+    MANAGEMENT_AND_GOVERNANCE("MANAGEMENT AND GOVERNANCE"),
+    NETWORKING("NETWORKING"),
+    SECURITY("SECURITY"),
+    STORAGE("STORAGE"),
+    WEB("WEB"),
+    OTHER("OTHER");
+
+    private String category;
+
+    ServiceCategory(String category) {
+        this.category = category;
+    }
+
+    @Override
+    public String toString() {
+        return this.category;
+    }
+
+    public static ServiceCategory fromString(String category) {
+        for (ServiceCategory serviceCategory : ServiceCategory.values()) {
+            if (serviceCategory.category.equalsIgnoreCase(category)) {
+                return serviceCategory;
+            }
+        }
+        throw new IllegalArgumentException("Unknown enum value: " + category);
+    }
+}
