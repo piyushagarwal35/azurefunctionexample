@@ -2,6 +2,9 @@ package org.example.functions;
 
 import com.microsoft.azure.functions.annotation.*;
 import com.microsoft.azure.functions.*;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvException;
 import org.example.functions.dto.Api6Request;
 import org.example.functions.dto.CostResponse;
 import org.example.functions.dto.Data3;
@@ -9,13 +12,13 @@ import org.example.functions.dto.Data3;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.functions.model.FocusExport;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -51,16 +54,20 @@ public class BlobTriggerFunc {
 
          List<FocusExport> usageMetrics = new ArrayList<>();
         for (String date : response1.getData().getDates()) {
+            String csvFilePath = "/path/to/csv/" + subscriptionId + "_" + date + ".csv";
+            if (Files.exists(Paths.get(csvFilePath))) {
+                usageMetrics.addAll(parseCsvFile(csvFilePath));
+            }
             // Check if CSV file exists for the date and subscriptionId
             // If exists, parse the CSV and add to usageMetrics
             // This is a placeholder for actual CSV parsing logic
-            FocusExport metric = new FocusExport();
-            metric.setBilledCost(BigDecimal.valueOf(100.950));
-            metric.setBillingAccountId("");
-            metric.setChargePeriodStart(new Date() );
-            metric.setChargePeriodEnd(new Date());
-            metric.setChargeDescription("Sample Description");
-            usageMetrics.add(metric);
+//            FocusExport metric = new FocusExport();
+//            metric.setBilledCost(BigDecimal.valueOf(100.950));
+//            metric.setBillingAccountId("");
+//            metric.setChargePeriodStart(new Date() );
+//            metric.setChargePeriodEnd(new Date());
+//            metric.setChargeDescription("Sample Description");
+//            usageMetrics.add(metric);
         }
 
         // Step 5: Send data to API6
@@ -95,6 +102,27 @@ public class BlobTriggerFunc {
 
         return content;
     }
+
+    private List<FocusExport> parseCsvFile(String filePath) throws IOException, CsvException {
+        List<FocusExport> usageMetrics = new ArrayList<>();
+        try (CSVReader csvReader = new CSVReader(new FileReader(filePath))) {
+            String[] values;
+            csvReader.readNext(); // Skip header
+            while ((values = csvReader.readNext()) != null) {
+                FocusExport metric = new FocusExport();
+                metric.setBilledCost(new BigDecimal(values[0]));
+                metric.setBillingAccountId(values[1]);
+                metric.setChargePeriodStart(new SimpleDateFormat("yyyy-MM-dd").parse(values[2]));
+                metric.setChargePeriodEnd(new SimpleDateFormat("yyyy-MM-dd").parse(values[3]));
+                metric.setChargeDescription(values[4]);
+                usageMetrics.add(metric);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return usageMetrics;
+    }
+
 
     private void sendToApi6(Api6Request request) throws IOException {
         URL url = new URL("http://localhost:8080/resourceusagemetrics/v1/api/usagemetrics/datasync/susbcriptions/" + request.getSubscriptionId() + "/load");
