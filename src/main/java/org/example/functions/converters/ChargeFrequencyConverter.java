@@ -1,7 +1,8 @@
 package org.example.functions.converters;
 
 import com.opencsv.bean.AbstractBeanField;
-import hitachi_genai.popDashBoard.enums.ChargeFrequency;
+import org.example.functions.enums.ChargeFrequency;
+//import hitachi_genai.popDashBoard.enums.ChargeFrequency;
 
 public class ChargeFrequencyConverter extends AbstractBeanField<ChargeFrequency,String> {
     @Override

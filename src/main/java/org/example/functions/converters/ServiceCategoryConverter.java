@@ -1,7 +1,8 @@
 package org.example.functions.converters;
 
 import com.opencsv.bean.AbstractBeanField;
-import hitachi_genai.popDashBoard.enums.ServiceCategory;
+import org.example.functions.enums.ServiceCategory;
+//import hitachi_genai.popDashBoard.enums.ServiceCategory;
 
 public class ServiceCategoryConverter extends AbstractBeanField<ServiceCategory,String>{
 

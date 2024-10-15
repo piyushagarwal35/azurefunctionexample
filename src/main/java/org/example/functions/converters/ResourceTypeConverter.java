@@ -1,7 +1,8 @@
 package org.example.functions.converters;
 
 import com.opencsv.bean.AbstractBeanField;
-import hitachi_genai.popDashBoard.enums.ResourceType;
+import org.example.functions.enums.ResourceType;
+//import hitachi_genai.popDashBoard.enums.ResourceType;
 
 public class ResourceTypeConverter extends AbstractBeanField<ResourceType,String>{
 
