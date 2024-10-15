@@ -13,10 +13,12 @@ public class blobtest {
     @FunctionName("blobtest")
     @StorageAccount("FUNCTIONS_WORKER_RUNTIME")
     public void run(
-        @BlobTrigger(name = "content", path = "mycontainer/{name}", dataType = "binary") byte[] content,
-        @BindingName("name") String name,
-        final ExecutionContext context
+            @BlobTrigger(name = "content", path = "data/subhigherenv2/monthlycost-focus-cost/{name}", dataType = "binary") byte[] content,
+            @BindingName("name") String name,
+            @BindingName("BlobTrigger") String uri,
+            final ExecutionContext context
     ) {
         context.getLogger().info("Java Blob trigger function processed a blob. Name: " + name + "\n  Size: " + content.length + " Bytes");
+        context.getLogger().info("Triggered path: " + uri);
     }
 }

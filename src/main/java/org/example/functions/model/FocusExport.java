@@ -5,10 +5,7 @@ import com.opencsv.bean.CsvCustomBindByName;
 
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.example.functions.converters.*;
 import org.example.functions.enums.*;
 
@@ -22,6 +19,7 @@ import java.util.logging.Logger;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 //@Table(name = "resource_usage_metrics_data")
 //@Entity
 public class FocusExport {
