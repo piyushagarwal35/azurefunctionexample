@@ -103,24 +103,41 @@ public class BlobTriggerFunc {
         return content;
     }
 
-    private List<FocusExport> parseCsvFile(String filePath) throws IOException, CsvException {
+  private List<FocusExport> parseCsvFile(String filePath) throws IOException, CsvException {
         List<FocusExport> usageMetrics = new ArrayList<>();
-        try (CSVReader csvReader = new CSVReader(new FileReader(filePath))) {
-            String[] values;
-            csvReader.readNext(); // Skip header
-            while ((values = csvReader.readNext()) != null) {
-                FocusExport metric = new FocusExport();
-                metric.setBilledCost(new BigDecimal(values[0]));
-                metric.setBillingAccountId(values[1]);
-                metric.setChargePeriodStart(new SimpleDateFormat("yyyy-MM-dd").parse(values[2]));
-                metric.setChargePeriodEnd(new SimpleDateFormat("yyyy-MM-dd").parse(values[3]));
-                metric.setChargeDescription(values[4]);
-                usageMetrics.add(metric);
-            }
+        List<FocusExport> records = null;
+
+//        try (CSVReader csvReader = new CSVReader(new FileReader(filePath))) {
+//            String[] values;
+//            csvReader.readNext(); // Skip header
+//            while ((values = csvReader.readNext()) != null) {
+//                FocusExport metric = new FocusExport();
+//                metric.setBilledCost(new BigDecimal(values[0]));
+//                metric.setBillingAccountId(values[1]);
+//                metric.setChargePeriodStart(new SimpleDateFormat("yyyy-MM-dd").parse(values[2]));
+//                metric.setChargePeriodEnd(new SimpleDateFormat("yyyy-MM-dd").parse(values[3]));
+//                metric.setChargeDescription(values[4]);
+//                usageMetrics.add(metric);
+//            }
+//        try (Reader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+        try (Reader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(Paths.get(filePath))))) {
+            // Define mapping strategy
+            HeaderColumnNameMappingStrategy<FocusExport> strategy = new HeaderColumnNameMappingStrategy<>();
+            strategy.setType(FocusExport.class);
+
+            // Create CsvToBean object
+            CsvToBean<FocusExport> csvToBean = new CsvToBeanBuilder<FocusExport>(reader)
+                    .withMappingStrategy(strategy)
+                    .withIgnoreLeadingWhiteSpace(true)
+                    .build();
+
+            // Parse the CSV file into a list of FocusExport objects
+            records = csvToBean.parse();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return usageMetrics;
+        //return usageMetrics;
+        return records;
     }
 
 
