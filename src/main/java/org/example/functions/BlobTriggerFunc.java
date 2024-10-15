@@ -45,7 +45,7 @@ public class BlobTriggerFunc {
             String subscriptionId = "0f8c3763-9eeb-40f9-9037-2a5426da75e9"; // Replace with actual subscription ID
          //   String api5Response = callApi5(subscriptionId);
 
-            //
+            //authentication take credential from key vault and pass it to api5
             CostResponse<Data3> response1 = callApi5(subscriptionId);
 
 
@@ -54,7 +54,7 @@ public class BlobTriggerFunc {
 
          List<FocusExport> usageMetrics = new ArrayList<>();
         for (String date : response1.getData().getDates()) {
-            String csvFilePath = "/path/to/csv/" + subscriptionId + "_" + date + ".csv";
+            String csvFilePath = "/path/to/csv/" + subscriptionId + "_" + date + ".csv"; // will implement later
             if (Files.exists(Paths.get(csvFilePath))) {
                 usageMetrics.addAll(parseCsvFile(csvFilePath));
             }
