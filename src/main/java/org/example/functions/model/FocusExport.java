@@ -64,7 +64,7 @@ public class FocusExport {
 
     @Enumerated(EnumType.STRING)
 //    @Column(name = "ChargeCategory", length = 16)
-    @CsvBindByName(column = "ChargeCategory")
+    @CsvCustomBindByName(column = "ChargeCategory",converter = ChargeCategoryConverter.class)
     private ChargeCategory ChargeCategory;
 
 //    @Column(name = "ChargeClass", columnDefinition = "text")
@@ -145,7 +145,7 @@ public class FocusExport {
 
     @Enumerated(EnumType.STRING)
    // @Column(name = "PricingCategory", length = 32)
-    @CsvBindByName(column = "PricingCategory")
+    @CsvCustomBindByName(column = "PricingCategory",converter = PricingCategoryConverter.class)
     private PricingCategory PricingCategory;
 
     //@Column(name = "PricingQuantity", columnDefinition = "numeric(25, 5)")
@@ -167,7 +167,7 @@ public class FocusExport {
 
     @Enumerated(EnumType.STRING)
     //@Column(name = "RegionId", length = 32)
-    @CsvBindByName(column = "RegionId")
+    @CsvCustomBindByName(column = "RegionId",converter = RegionIdConverter.class)
     private RegionId RegionId;
 
     @Enumerated(EnumType.STRING)
@@ -192,8 +192,8 @@ public class FocusExport {
     @Enumerated(EnumType.STRING)
     //@Column(name = "ServiceCategory", columnDefinition = "text")
     @CsvCustomBindByName(column = "ServiceCategory",converter = ServiceCategoryConverter.class)
-    @CsvBindByName(column = "ServiceCategory")
-    private String ServiceCategory;
+    //@CsvBindByName(column = "ServiceCategory")
+    private ServiceCategory ServiceCategory;
 
     //@Enumerated(EnumType.STRING)
     //@Column(name = "ServiceName", columnDefinition = "text")
