@@ -6,6 +6,7 @@ import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 //public class CustomDateConverter extends AbstractBeanField<Date, String> {
 //    private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm'Z'"; // Adjust the format as needed
@@ -20,12 +21,15 @@ import java.util.Date;
 //    }
 //}
 public class CustomDateConverter extends AbstractBeanField<Date, String> {
-    private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm'Z'"; // Adjust the format as needed
+    private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm'Z'";// ISO 8601 format with UTC
 
     @Override
     protected Object convert(String value) throws CsvDataTypeMismatchException {
         try {
-            return new SimpleDateFormat(DATE_FORMAT).parse(value);
+            SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return sdf.parse(value);
+//            return new SimpleDateFormat(DATE_FORMAT).parse(value);
         } catch (ParseException e) {
             throw new CsvDataTypeMismatchException("Failed to parse date: " + e);
         }

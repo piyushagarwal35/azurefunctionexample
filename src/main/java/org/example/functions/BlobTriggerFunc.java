@@ -1,6 +1,7 @@
 package org.example.functions;
 
 
+import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
@@ -52,6 +53,7 @@ public class BlobTriggerFunc {
 
         CostResponse<Data3> response;
         try {
+            //String subscriptionId = "TestId.";
             String subscriptionId = "0f8c3763-9eeb-40f9-9037-2a5426da75e9"; // Replace with actual subscription ID
          //   String api5Response = callApi5(subscriptionId);
 
@@ -64,15 +66,44 @@ public class BlobTriggerFunc {
            // response = objectMapper.readValue(api5Response, CostResponse.class);
 
          List<FocusExport> usageMetrics = new ArrayList<>();
+            String connectionString = System.getenv("AZURE_STORAGE_CONNECTION_STRING");
+            String containerName = "data";
+            String blobPath = "subhigherenv2/monthlycost-focus-cost/test.csv";
+            context.getLogger().info("Checking if blob exists at path: " + blobPath);
+
+            BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
+                    .connectionString(connectionString)
+                    .buildClient();
+            BlobContainerClient containerClient = blobServiceClient.getBlobContainerClient(containerName);
+
+            if (containerClient.exists()) {
+                BlobClient blobClient = containerClient.getBlobClient(blobPath);
+                if (blobClient.exists()) {
+                    context.getLogger().info("Blob exists. Parsing CSV file at path: " + blobPath);
+                    usageMetrics.addAll(parseCsvFile(blobClient));
+                    context.getLogger().info("Parsed CSV file data: " + usageMetrics.toString());
+                } else {
+                    context.getLogger().warning("Blob does not exist at path: " + blobPath);
+                }
+            } else {
+                context.getLogger().warning("Container does not exist: " + containerName);
+            }
+
+
+
      //   for (String date : response1.getData().getDates()) {
             //data / subhigherenv2 / monthlycost-focus-cost / 20240901-20240930 / eedecc33-7c1e-4805-befd-0d882349889c/part_0_0001.csv
 //            String csvFilePath = "/path/to/csv/" + subscriptionId + "_" + date + ".csv"; // will implement later
-            String csvFilePath = "data/subhigherenv2/monthlycost-focus-cost/part_0_0001_v1.csv";
-            if (Files.exists(Paths.get(csvFilePath))) {  //might be an issue
-                context.getLogger().info("parsing csv fils on path : "+ csvFilePath );
-                usageMetrics.addAll(parseCsvFile(csvFilePath));
-                context.getLogger().info("parsed csv files data : " + usageMetrics.toString());
-            }
+//            String csvFilePath = "data/subhigherenv2/monthlycost-focus-cost/part_0_0001_v1.csv";
+//           // String csvFilePath = "subhigherenv2/monthlycost-focus-cost/part_0_0001_v1.csv";
+//            context.getLogger().info("Checking if file exists at path: " + csvFilePath);
+//            if (Files.exists(Paths.get(csvFilePath))) {  //might be an issue
+//                context.getLogger().info("File exits parsing csv fils on path : "+ csvFilePath );
+//                usageMetrics.addAll(parseCsvFile(csvFilePath));
+//                context.getLogger().info("parsed csv files data : " + usageMetrics.toString());
+//            }else{
+//                context.getLogger().info("file not found: " + Paths.get(csvFilePath));
+//            }
            // context.getLogger().info("API 5 date : " + date);
            // String prefix = "data/subhigherenv2/monthlycost-focus-cost/" + date + "/";
 //            String prefix = "subhigherenv2/monthlycost-focus-cost/" ;
@@ -160,7 +191,7 @@ public class BlobTriggerFunc {
         return blobPaths;
     }
 
-  private List<FocusExport> parseCsvFile(String filePath) throws IOException, CsvException {
+  private List<FocusExport> parseCsvFile(BlobClient blobClient) throws IOException, CsvException {
         List<FocusExport> usageMetrics = new ArrayList<>();
         List<FocusExport> records = null;
 
@@ -177,7 +208,7 @@ public class BlobTriggerFunc {
 //                usageMetrics.add(metric);
 //            }
 //        try (Reader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-        try (Reader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(Paths.get(filePath))))) {
+        try (Reader reader = new BufferedReader(new InputStreamReader(blobClient.openInputStream()))) {
             // Define mapping strategy
             HeaderColumnNameMappingStrategy<FocusExport> strategy = new HeaderColumnNameMappingStrategy<>();
             strategy.setType(FocusExport.class);
@@ -204,6 +235,8 @@ public class BlobTriggerFunc {
         context.getLogger().info("API 6 calling inside method : ");
 
         //https://resource-usage-metrics.dev.hitachi-ai.io/resourceusagemetrics/v1/api/usagemetrics/datasync/subscriptions/csc/loadusagemetrics
+    //    http://localhost:8080/resourceusagemetrics/v1/api/usagemetrics/datasync/subscriptions/abv/loadusagemetrics
+       // URL url = new URL("http://localhost:8080/resourceusagemetrics/v1/api/usagemetrics/datasync/susbcriptions/" + request.getSubscriptionId() + "/loadusagemetrics");
         URL url = new URL("https://resource-usage-metrics.dev.hitachi-ai.io/resourceusagemetrics/v1/api/usagemetrics/datasync/susbcriptions/" + request.getSubscriptionId() + "/loadusagemetrics");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
