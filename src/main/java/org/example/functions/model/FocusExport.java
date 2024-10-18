@@ -90,9 +90,10 @@ public class FocusExport {
     @CsvCustomBindByName(converter = CustomDateConverter.class)
     private Date ChargePeriodStart;
 
+    @Enumerated(EnumType.STRING)
 //    @Column(name = "CommitmentDiscountCategory", columnDefinition = "text")
     @CsvBindByName(column = "CommitmentDiscountCategory")
-    private String CommitmentDiscountCategory;
+    private CommitmentDiscountCategory CommitmentDiscountCategory;
 
 //    @Column(name = "CommitmentDiscountId", columnDefinition = "text")
     @CsvBindByName(column = "CommitmentDiscountID")
@@ -102,9 +103,10 @@ public class FocusExport {
     @CsvBindByName(column = "CommitmentDiscountName")
     private String CommitmentDiscountName;
 
+    @Enumerated(EnumType.STRING)
 //    @Column(name = "CommitmentDiscountStatus", columnDefinition = "text")
     @CsvBindByName(column = "CommitmentDiscount Status")
-    private String CommitmentDiscountStatus;
+    private CommitmentDiscountStatus CommitmentDiscountStatus;
 
  //   @Column(name = "CommitmentDiscountType", columnDefinition = "text")
     @CsvBindByName(column = "CommitmentDiscountType")
