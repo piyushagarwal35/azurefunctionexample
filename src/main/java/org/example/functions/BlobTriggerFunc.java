@@ -15,6 +15,8 @@ import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.bean.HeaderColumnNameMappingStrategy;
 import com.opencsv.exceptions.CsvException;
+import org.apache.commons.lang3.time.DateUtils;
+import org.example.functions.converters.CustomDateConverter;
 import org.example.functions.dto.Api6Request;
 import org.example.functions.dto.CostResponse;
 import org.example.functions.dto.Data3;
@@ -32,6 +34,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
+import java.util.stream.Collectors;
 
 /**
  * Azure Functions with Azure Blob trigger.
@@ -53,8 +57,8 @@ public class BlobTriggerFunc {
 
         CostResponse<Data3> response;
         try {
-            //String subscriptionId = "TestId.";
-            String subscriptionId = "0f8c3763-9eeb-40f9-9037-2a5426da75e9"; // Replace with actual subscription ID
+            String subscriptionId = "TestId";
+           // String subscriptionId = "0f8c3763-9eeb-40f9-9037-2a5426da75e9"; // Replace with actual subscription ID
          //   String api5Response = callApi5(subscriptionId);
 
             context.getLogger().info("API 5 calling : ");
@@ -80,7 +84,7 @@ public class BlobTriggerFunc {
                 BlobClient blobClient = containerClient.getBlobClient(blobPath);
                 if (blobClient.exists()) {
                     context.getLogger().info("Blob exists. Parsing CSV file at path: " + blobPath);
-                    usageMetrics.addAll(parseCsvFile(blobClient));
+                    usageMetrics.addAll(parseCsvFile(blobClient,response1));
                     context.getLogger().info("Parsed CSV file data: " + usageMetrics.toString());
                 } else {
                     context.getLogger().warning("Blob does not exist at path: " + blobPath);
@@ -146,7 +150,8 @@ public class BlobTriggerFunc {
 
     private CostResponse<Data3> callApi5(String subscriptionId) throws IOException {
         //https://resource-usage-metrics.dev.hitachi-ai.io/resourceusagemetrics/v1/api/usagemetrics/datasync/susbcriptions/xyz/dates
-        URL url = new URL("https://resource-usage-metrics.dev.hitachi-ai.io/resourceusagemetrics/v1/api/usagemetrics/datasync/susbcriptions/" + subscriptionId + "/dates");
+       // URL url = new URL("https://resource-usage-metrics.dev.hitachi-ai.io/resourceusagemetrics/v1/api/usagemetrics/datasync/susbcriptions/" + subscriptionId + "/dates");
+        URL url = new URL("http://localhost:8080/resourceusagemetrics/v1/api/usagemetrics/datasync/susbcriptions/" + subscriptionId + "/dates");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
         conn.setRequestProperty("Content-Type", "application/json");
@@ -191,10 +196,12 @@ public class BlobTriggerFunc {
         return blobPaths;
     }
 
-  private List<FocusExport> parseCsvFile(BlobClient blobClient) throws IOException, CsvException {
+  private List<FocusExport> parseCsvFile(BlobClient blobClient,CostResponse<Data3> response) throws IOException, CsvException {
         List<FocusExport> usageMetrics = new ArrayList<>();
         List<FocusExport> records = null;
-
+    String dateFormatPattern = "yyyy-MM-dd";
+    SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatPattern);
+    dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 //        try (CSVReader csvReader = new CSVReader(new FileReader(filePath))) {
 //            String[] values;
 //            csvReader.readNext(); // Skip header
@@ -208,6 +215,11 @@ public class BlobTriggerFunc {
 //                usageMetrics.add(metric);
 //            }
 //        try (Reader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+
+      List<String> dates = response.getData().getDates();
+      String subcriptionid = response.getData().getSubscriptionId();
+
+
         try (Reader reader = new BufferedReader(new InputStreamReader(blobClient.openInputStream()))) {
             // Define mapping strategy
             HeaderColumnNameMappingStrategy<FocusExport> strategy = new HeaderColumnNameMappingStrategy<>();
@@ -221,12 +233,27 @@ public class BlobTriggerFunc {
 
             // Parse the CSV file into a list of FocusExport objects
             records = csvToBean.parse();
+
+            usageMetrics = records.stream()
+                    .filter(record -> dates.stream()
+                            .anyMatch(datestr -> {
+                                try {
+                                    Date parseDate = dateFormat.parse(datestr);
+                                    return DateUtils.isSameDay(parseDate, record.getChargePeriodStart());
+                                } catch (Exception e){
+                                    e.printStackTrace();
+                                    return false;
+                                }
+                            })
+                  //  .filter(record -> dates.contains(record.getChargePeriodStart().toString())
+                            )
+                    .collect(Collectors.toList());
         } catch (Exception e) {
             e.printStackTrace();
         }
-        //return usageMetrics;
+        return usageMetrics;
 
-        return records;
+       // return records;
     }
 
 
@@ -236,8 +263,8 @@ public class BlobTriggerFunc {
 
         //https://resource-usage-metrics.dev.hitachi-ai.io/resourceusagemetrics/v1/api/usagemetrics/datasync/subscriptions/csc/loadusagemetrics
     //    http://localhost:8080/resourceusagemetrics/v1/api/usagemetrics/datasync/subscriptions/abv/loadusagemetrics
-       // URL url = new URL("http://localhost:8080/resourceusagemetrics/v1/api/usagemetrics/datasync/susbcriptions/" + request.getSubscriptionId() + "/loadusagemetrics");
-        URL url = new URL("https://resource-usage-metrics.dev.hitachi-ai.io/resourceusagemetrics/v1/api/usagemetrics/datasync/susbcriptions/" + request.getSubscriptionId() + "/loadusagemetrics");
+        URL url = new URL("http://localhost:8080/resourceusagemetrics/v1/api/usagemetrics/datasync/subscriptions/" + request.getSubscriptionId() + "/loadusagemetrics");
+       // URL url = new URL("https://resource-usage-metrics.dev.hitachi-ai.io/resourceusagemetrics/v1/api/usagemetrics/datasync/subscriptions/" + request.getSubscriptionId() + "/loadusagemetrics");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-Type", "application/json");

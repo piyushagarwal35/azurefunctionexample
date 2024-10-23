@@ -67,9 +67,11 @@ public class FocusExport {
     @CsvCustomBindByName(column = "ChargeCategory",converter = ChargeCategoryConverter.class)
     private ChargeCategory ChargeCategory;
 
+    @Enumerated(EnumType.STRING)
 //    @Column(name = "ChargeClass", columnDefinition = "text")
+ //   @CsvCustomBindByName(column = "ChargeClass",converter = ChargeClassConverter.class)
     @CsvBindByName(column = "ChargeClass")
-    private String ChargeClass;
+    private ChargeClass ChargeClass;
 
 //    @Column(name = "ChargeDescription", columnDefinition = "text")
     @CsvBindByName(column = "ChargeDescription")
